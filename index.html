@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stratejik Eylem Planı Şablonu - Eğitim Dokümanı</title>
+    <meta name="description" content="Lise ve üniversite öğrencileri ile genç yöneticiler için stratejik eylem planı oluşturma eğitimi">
+    <meta name="keywords" content="stratejik plan, eylem planı, yönetim, eğitim, şablon">
+    <meta name="author" content="Ismail Karaca">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Flowbite CSS CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css" rel="stylesheet" />
+    
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="accessibility.css">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        /* Custom styles for better UX */
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .section-padding {
+            padding: 4rem 0;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .sidebar-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar-hidden {
+                transform: translateX(-100%);
+            }
+        }
+        
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        
+        .form-section {
+            border-left: 4px solid #667eea;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        
+        .floating-save {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 50;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 60;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased" x-data="strategicPlanApp()">
+    
+    <!-- Header -->
+    <header class="bg-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-900">Stratejik Eylem Planı</h1>
+                            <p class="text-sm text-gray-600">Eğitim Dokümanı</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:flex items-center space-x-2 text-sm text-gray-600">
+                        <span>İlerleme:</span>
+                        <div class="w-32 bg-gray-200 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full progress-bar" 
+                                 :style="`width: ${progress}%`"></div>
+                        </div>
+                        <span x-text="`${progress}%`"></span>
+                    </div>
+                    
+                    <button @click="saveToStorage()" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        <i class="fas fa-save mr-2"></i>Kaydet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex min-h-screen">
+        
+        <!-- Sidebar -->
+        <aside class="fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-xl sidebar-transition md:translate-x-0"
+               :class="sidebarOpen ? 'translate-x-0' : 'sidebar-hidden'">
+            
+            <div class="flex flex-col h-full">
+                <!-- Sidebar Header -->
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">İçerik Menüsü</h2>
+                    <p class="text-sm text-gray-600 mt-1">Bölümler arası geçiş</p>
+                </div>
+                
+                <!-- Navigation Menu -->
+                <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                    <template x-for="(section, index) in sections" :key="section.id">
+                        <a @click="scrollToSection(section.id); sidebarOpen = false" 
+                           class="flex items-center p-3 rounded-lg cursor-pointer transition-colors hover:bg-blue-50 group"
+                           :class="activeSection === section.id ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:text-blue-600'">
+                            <div class="flex items-center justify-center w-8 h-8 rounded-lg mr-3"
+                                 :class="activeSection === section.id ? 'bg-blue-200' : 'bg-gray-100 group-hover:bg-blue-100'">
+                                <span x-text="section.icon" class="text-sm"></span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium" x-text="section.title"></div>
+                                <div class="text-xs text-gray-500" x-text="`${index + 1}. Bölüm`"></div>
+                            </div>
+                            <div class="w-2 h-2 rounded-full"
+                                 :class="sectionProgress[section.id] > 0 ? 'bg-green-400' : 'bg-gray-300'"></div>
+                        </a>
+                    </template>
+                </nav>
+                
+                <!-- Sidebar Footer -->
+                <div class="p-4 border-t border-gray-200">
+                    <div class="text-xs text-gray-500 text-center">
+                        <p>Toplam İlerleme</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                            <div class="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full progress-bar" 
+                                 :style="`width: ${progress}%`"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 md:ml-64">
+            
+            <!-- Hero Section -->
+            <section class="gradient-bg text-white section-padding">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                        Stratejik Eylem Planı
+                        <span class="block text-2xl md:text-3xl font-normal mt-2 opacity-90">
+                            Eğitim Dokümanı
+                        </span>
+                    </h1>
+                    <p class="text-xl md:text-2xl mb-8 opacity-90 max-w-3xl mx-auto">
+                        Lise ve üniversite öğrencileri ile genç yöneticiler için 
+                        adım adım stratejik plan oluşturma rehberi
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button @click="scrollToSection('introduction')" 
+                                class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Eğitime Başla
+                        </button>
+                        <button @click="loadFromStorage()" 
+                                class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+                            <i class="fas fa-upload mr-2"></i>Kayıtlı Planı Yükle
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Introduction Section -->
+            <section id="introduction" class="section-padding bg-white">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                            📚 Stratejik Eylem Planı Nedir?
+                        </h2>
+                        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                            Çocuğa anlatır gibi basit ve anlaşılır bir şekilde öğrenelim
+                        </p>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-blue-50 p-8 rounded-xl">
+                            <h3 class="text-2xl font-bold text-blue-900 mb-4">🎯 Basit Tanım</h3>
+                            <p class="text-gray-700 text-lg leading-relaxed" x-text="educationalContent.introduction.content"></p>
+                        </div>
+                        
+                        <div class="bg-green-50 p-8 rounded-xl">
+                            <h3 class="text-2xl font-bold text-green-900 mb-4">✨ Neden Önemli?</h3>
+                            <p class="text-gray-700 text-lg leading-relaxed" x-text="educationalContent.why_important.content"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-8 rounded-xl">
+                        <h3 class="text-2xl font-bold text-purple-900 mb-6">🔑 Temel Faydalar</h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <template x-for="benefit in educationalContent.introduction.key_points">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 bg-purple-200 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-check text-purple-600 text-xs"></i>
+                                    </div>
+                                    <span class="text-gray-700" x-text="benefit"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Form Sections -->
+            <template x-for="section in sections" :key="section.id">
+                <section :id="section.id" class="section-padding" 
+                         :class="section.id === 'basic_info' ? 'bg-gray-50' : 'bg-white'">
+                    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                        
+                        <!-- Section Header -->
+                        <div class="text-center mb-12">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-6">
+                                <span class="text-2xl" x-text="section.icon"></span>
+                            </div>
+                            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4" x-text="section.title"></h2>
+                            <p class="text-xl text-gray-600 max-w-3xl mx-auto" x-text="section.description"></p>
+                        </div>
+
+                        <!-- Form Content -->
+                        <div class="form-section p-8 rounded-xl shadow-lg">
+                            <template x-for="(field, fieldKey) in section.fields" :key="fieldKey">
+                                <div class="mb-8">
+                                    
+                                    <!-- Field Label and Description -->
+                                    <div class="mb-4">
+                                        <label class="block text-lg font-semibold text-gray-900 mb-2">
+                                            <span x-text="field.label"></span>
+                                            <span x-show="field.required" class="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <p class="text-gray-600 mb-2" x-text="field.description"></p>
+                                        <p x-show="field.help_text" class="text-sm text-blue-600 italic" x-text="field.help_text"></p>
+                                    </div>
+
+                                    <!-- Input Fields -->
+                                    <div class="space-y-4">
+                                        
+                                        <!-- Text Input -->
+                                        <template x-if="field.type === 'text'">
+                                            <input type="text" 
+                                                   :placeholder="field.example || ''"
+                                                   x-model="formData[section.id][fieldKey]"
+                                                   @input="updateProgress()"
+                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                                        </template>
+
+                                        <!-- Textarea -->
+                                        <template x-if="field.type === 'textarea'">
+                                            <textarea rows="4" 
+                                                      :placeholder="field.example || ''"
+                                                      x-model="formData[section.id][fieldKey]"
+                                                      @input="updateProgress()"
+                                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-vertical"></textarea>
+                                        </template>
+
+                                        <!-- Date Input -->
+                                        <template x-if="field.type === 'date'">
+                                            <input type="date" 
+                                                   x-model="formData[section.id][fieldKey]"
+                                                   @input="updateProgress()"
+                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                                        </template>
+
+                                        <!-- Number Input -->
+                                        <template x-if="field.type === 'number'">
+                                            <input type="number" 
+                                                   :placeholder="field.example || ''"
+                                                   x-model="formData[section.id][fieldKey]"
+                                                   @input="updateProgress()"
+                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                                        </template>
+
+                                        <!-- Select Input -->
+                                        <template x-if="field.type === 'select'">
+                                            <select x-model="formData[section.id][fieldKey]"
+                                                    @change="updateProgress()"
+                                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                                                <option value="">Seçiniz...</option>
+                                                <template x-for="option in field.options">
+                                                    <option :value="option" x-text="option"></option>
+                                                </template>
+                                            </select>
+                                        </template>
+
+                                        <!-- Array Input -->
+                                        <template x-if="field.type === 'array' && field.item_type === 'text'">
+                                            <div class="space-y-3">
+                                                <template x-for="(item, index) in (formData[section.id][fieldKey] || [])" :key="index">
+                                                    <div class="flex items-center space-x-2">
+                                                        <input type="text" 
+                                                               x-model="formData[section.id][fieldKey][index]"
+                                                               @input="updateProgress()"
+                                                               :placeholder="`${field.label} ${index + 1}`"
+                                                               class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                                        <button @click="removeArrayItem(section.id, fieldKey, index)"
+                                                                class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                                            <i class="fas fa-trash text-sm"></i>
+                                                        </button>
+                                                    </div>
+                                                </template>
+                                                <button @click="addArrayItem(section.id, fieldKey)"
+                                                        class="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors">
+                                                    <i class="fas fa-plus mr-2"></i>Yeni Ekle
+                                                </button>
+                                            </div>
+                                        </template>
+
+                                    </div>
+
+                                    <!-- Example Display -->
+                                    <template x-if="field.example && (field.type === 'text' || field.type === 'textarea')">
+                                        <div class="mt-3 p-3 bg-blue-50 rounded-lg">
+                                            <p class="text-sm text-blue-800">
+                                                <i class="fas fa-lightbulb mr-2"></i>
+                                                <strong>Örnek:</strong> <span x-text="field.example"></span>
+                                            </p>
+                                        </div>
+                                    </template>
+
+                                </div>
+                            </template>
+                        </div>
+
+                    </div>
+                </section>
+            </template>
+
+            <!-- Success Tips Section -->
+            <section class="section-padding bg-gradient-to-r from-green-50 to-blue-50">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                            💡 Başarı İpuçları
+                        </h2>
+                        <p class="text-xl text-gray-600">
+                            Etkili bir stratejik eylem planı oluşturmak için bu ipuçlarını takip edin
+                        </p>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <template x-for="(tip, index) in educationalContent.tips.tips" :key="index">
+                            <div class="bg-white p-6 rounded-xl shadow-lg card-hover">
+                                <div class="flex items-start space-x-4">
+                                    <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-white font-bold text-sm" x-text="index + 1"></span>
+                                    </div>
+                                    <p class="text-gray-700 text-lg" x-text="tip"></p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Floating Save Button -->
+    <div class="floating-save">
+        <button @click="saveToStorage()" 
+                class="bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all">
+            <i class="fas fa-save text-xl"></i>
+        </button>
+    </div>
+
+    <!-- Notification -->
+    <div x-show="notification.show" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="transform translate-x-full"
+         x-transition:enter-end="transform translate-x-0"
+         x-transition:leave="transition ease-in duration-300"
+         x-transition:leave-start="transform translate-x-0"
+         x-transition:leave-end="transform translate-x-full"
+         class="notification">
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm"
+             :class="notification.type === 'success' ? 'border-green-200' : 'border-red-200'">
+            <div class="flex items-center space-x-3">
+                <div class="flex-shrink-0">
+                    <i :class="notification.type === 'success' ? 'fas fa-check-circle text-green-500' : 'fas fa-exclamation-circle text-red-500'"></i>
+                </div>
+                <p class="text-gray-900 font-medium" x-text="notification.message"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white section-padding">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                
+                <!-- About -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Hakkında</h3>
+                    <p class="text-gray-300 mb-4">
+                        Bu eğitim dokümanı, stratejik eylem planı oluşturma sürecini 
+                        basit ve anlaşılır bir şekilde öğretmek için hazırlanmıştır.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="https://linkedin.com/in/ismailkaracaofficial/" 
+                           target="_blank" 
+                           rel="dofollow"
+                           class="text-blue-400 hover:text-blue-300 transition-colors">
+                            <i class="fab fa-linkedin text-xl"></i>
+                        </a>
+                        <a href="https://titanlar.com" 
+                           target="_blank" 
+                           rel="dofollow"
+                           class="text-purple-400 hover:text-purple-300 transition-colors">
+                            <i class="fas fa-globe text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Creator -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Eğitmen</h3>
+                    <div class="space-y-2">
+                        <p class="text-gray-300">
+                            <strong>Ismail 🌔 Karaca</strong>
+                        </p>
+                        <p class="text-gray-400">
+                            Digital Intelligence Strategist, Consultant
+                        </p>
+                        <p class="text-gray-400">
+                            Head of: 🌐Titanlar.com
+                        </p>
+                        <a href="https://linkedin.com/in/ismailkaracaofficial/" 
+                           target="_blank" 
+                           rel="dofollow"
+                           class="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors">
+                            <i class="fab fa-linkedin mr-2"></i>
+                            LinkedIn Profili
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Links -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Bağlantılar</h3>
+                    <div class="space-y-2">
+                        <a href="https://titanlar.com" 
+                           target="_blank" 
+                           rel="dofollow"
+                           class="block text-gray-300 hover:text-white transition-colors">
+                            🌐 Titanlar.com
+                        </a>
+                        <a href="https://linkedin.com/in/ismailkaracaofficial/" 
+                           target="_blank" 
+                           rel="dofollow"
+                           class="block text-gray-300 hover:text-white transition-colors">
+                            👤 LinkedIn Profili
+                        </a>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                <p class="text-gray-400">
+                    © 2025 Ismail Karaca. Tüm hakları saklıdır. 
+                    <a href="https://titanlar.com" target="_blank" rel="dofollow" class="text-purple-400 hover:text-purple-300">
+                        Titanlar.com
+                    </a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Flowbite JS CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        function strategicPlanApp() {
+            return {
+                // State
+                sidebarOpen: false,
+                activeSection: 'introduction',
+                progress: 0,
+                notification: {
+                    show: false,
+                    message: '',
+                    type: 'success'
+                },
+                
+                // Data
+                templateData: {},
+                formData: {},
+                sections: [],
+                educationalContent: {},
+                sectionProgress: {},
+                
+                // Initialize
+                async init() {
+                    await this.loadTemplateData();
+                    this.initializeFormData();
+                    this.setupIntersectionObserver();
+                    this.loadFromStorage();
+                    this.updateProgress();
+                },
+                
+                // Load template data from JSON
+                async loadTemplateData() {
+                    try {
+                        const response = await fetch('strategic_action_plan_enhanced.json');
+                        this.templateData = await response.json();
+                        
+                        // Extract sections
+                        this.sections = Object.values(this.templateData.template_structure)
+                            .sort((a, b) => a.order - b.order);
+                        
+                        // Extract educational content
+                        this.educationalContent = this.templateData.educational_content;
+                        
+                    } catch (error) {
+                        console.error('Template data yüklenirken hata:', error);
+                        this.showNotification('Template verisi yüklenemedi', 'error');
+                    }
+                },
+                
+                // Initialize form data structure
+                initializeFormData() {
+                    this.sections.forEach(section => {
+                        this.formData[section.id] = {};
+                        this.sectionProgress[section.id] = 0;
+                        
+                        Object.keys(section.fields).forEach(fieldKey => {
+                            const field = section.fields[fieldKey];
+                            if (field.type === 'array') {
+                                this.formData[section.id][fieldKey] = [];
+                            } else {
+                                this.formData[section.id][fieldKey] = '';
+                            }
+                        });
+                    });
+                },
+                
+                // Navigation
+                scrollToSection(sectionId) {
+                    const element = document.getElementById(sectionId);
+                    if (element) {
+                        element.scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                },
+                
+                // Setup intersection observer for active section tracking
+                setupIntersectionObserver() {
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                this.activeSection = entry.target.id;
+                            }
+                        });
+                    }, {
+                        threshold: 0.3,
+                        rootMargin: '-100px 0px -50% 0px'
+                    });
+                    
+                    // Observe all sections
+                    setTimeout(() => {
+                        ['introduction', ...this.sections.map(s => s.id)].forEach(id => {
+                            const element = document.getElementById(id);
+                            if (element) observer.observe(element);
+                        });
+                    }, 100);
+                },
+                
+                // Array management
+                addArrayItem(sectionId, fieldKey) {
+                    if (!this.formData[sectionId][fieldKey]) {
+                        this.formData[sectionId][fieldKey] = [];
+                    }
+                    this.formData[sectionId][fieldKey].push('');
+                    this.updateProgress();
+                },
+                
+                removeArrayItem(sectionId, fieldKey, index) {
+                    this.formData[sectionId][fieldKey].splice(index, 1);
+                    this.updateProgress();
+                },
+                
+                // Progress calculation
+                updateProgress() {
+                    let totalFields = 0;
+                    let filledFields = 0;
+                    
+                    this.sections.forEach(section => {
+                        let sectionTotal = 0;
+                        let sectionFilled = 0;
+                        
+                        Object.keys(section.fields).forEach(fieldKey => {
+                            const field = section.fields[fieldKey];
+                            const value = this.formData[section.id][fieldKey];
+                            
+                            sectionTotal++;
+                            totalFields++;
+                            
+                            if (field.type === 'array') {
+                                if (Array.isArray(value) && value.length > 0 && value.some(item => item.trim() !== '')) {
+                                    sectionFilled++;
+                                    filledFields++;
+                                }
+                            } else {
+                                if (value && value.toString().trim() !== '') {
+                                    sectionFilled++;
+                                    filledFields++;
+                                }
+                            }
+                        });
+                        
+                        this.sectionProgress[section.id] = sectionTotal > 0 ? Math.round((sectionFilled / sectionTotal) * 100) : 0;
+                    });
+                    
+                    this.progress = totalFields > 0 ? Math.round((filledFields / totalFields) * 100) : 0;
+                },
+                
+                // Storage management
+                saveToStorage() {
+                    try {
+                        const dataToSave = {
+                            formData: this.formData,
+                            timestamp: new Date().toISOString(),
+                            progress: this.progress
+                        };
+                        
+                        localStorage.setItem('strategicPlanData', JSON.stringify(dataToSave));
+                        this.showNotification('Veriler başarıyla kaydedildi!', 'success');
+                    } catch (error) {
+                        console.error('Kaydetme hatası:', error);
+                        this.showNotification('Kaydetme sırasında hata oluştu', 'error');
+                    }
+                },
+                
+                loadFromStorage() {
+                    try {
+                        const savedData = localStorage.getItem('strategicPlanData');
+                        if (savedData) {
+                            const parsed = JSON.parse(savedData);
+                            this.formData = { ...this.formData, ...parsed.formData };
+                            this.updateProgress();
+                            this.showNotification('Kayıtlı veriler yüklendi!', 'success');
+                        }
+                    } catch (error) {
+                        console.error('Yükleme hatası:', error);
+                        this.showNotification('Veriler yüklenirken hata oluştu', 'error');
+                    }
+                },
+                
+                // Notification system
+                showNotification(message, type = 'success') {
+                    this.notification = {
+                        show: true,
+                        message: message,
+                        type: type
+                    };
+                    
+                    setTimeout(() => {
+                        this.notification.show = false;
+                    }, 3000);
+                },
+                
+                // Export functionality
+                exportData() {
+                    const dataToExport = {
+                        ...this.formData,
+                        metadata: {
+                            exportDate: new Date().toISOString(),
+                            progress: this.progress
+                        }
+                    };
+                    
+                    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
+                        type: 'application/json'
+                    });
+                    
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `stratejik-eylem-plani-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    this.showNotification('Plan başarıyla dışa aktarıldı!', 'success');
+                }
+            }
+        }
+        
+        // Auto-save functionality
+        setInterval(() => {
+            const app = Alpine.store || window.Alpine?.store;
+            if (app && typeof app.saveToStorage === 'function') {
+                app.saveToStorage();
+            }
+        }, 30000); // Auto-save every 30 seconds
+    </script>
+</body>
+</html>
+
